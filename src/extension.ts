@@ -54,7 +54,11 @@ function unescapeJsonString(inner: string): string {
 }
 
 async function minifyCss(css: string): Promise<string> {
-  const result = await postcss([cssnano({ preset: "default" })]).process(css, {
+  const result = await postcss([
+    cssnano({
+      preset: ["default", { cssDeclarationSorter: false }],
+    }),
+  ]).process(css, {
     from: undefined,
   });
   return result.css.trim();
