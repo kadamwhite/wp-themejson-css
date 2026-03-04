@@ -2,6 +2,10 @@
 
 All notable changes to the **wp-themejson-css** extension will be documented in this file.
 
+## [v1.0.0]
+
+- First published release, functionally identical to v0.0.2
+
 ## [v0.0.2]
 
 - Preserve double-colon syntax on `::before` and `::after` properties (they are ignored by WordPress when using only a single colon).
