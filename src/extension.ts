@@ -3,6 +3,8 @@
 import * as vscode from "vscode";
 import * as jsonc from "jsonc-parser";
 import prettier from "prettier";
+import postcss from "postcss";
+import cssnano from "cssnano";
 
 const SCHEME = "wp-css";
 
@@ -51,15 +53,16 @@ function unescapeJsonString(inner: string): string {
   return inner.replace(/\\"/g, '"');
 }
 
+async function minifyCss(css: string): Promise<string> {
+  const result = await postcss([cssnano({ preset: "default" })]).process(css, {
+    from: undefined,
+  });
+  return result.css.trim();
+}
+
 function escapeForJsonString(text: string): string {
-  const minified = text
-    .replace(/\n/g, ' ')
-    .replace(/\s+/g, ' ')
-    .replace(/:\s+/g, ":")
-    .replace(/;\s+/g, ";")
-    .replace(/\s*([}{])\s*/g, '$1');
   // JSON.stringify returns quoted string; strip surrounding quotes.
-  return JSON.stringify(minified).slice(1, -1);
+  return JSON.stringify(text).slice(1, -1);
 }
 
 const targetsByCssDocUri = new Map<string, CssTarget>();
@@ -199,7 +202,8 @@ export function activate(context: vscode.ExtensionContext) {
 
       // Take edited CSS, minify + escape, and write back into the JSON string
       const editedCss = doc.getText();
-      const escaped = escapeForJsonString(editedCss);
+      const minified = await minifyCss(editedCss);
+      const escaped = escapeForJsonString(minified);
 
       const edit = new vscode.WorkspaceEdit();
       edit.replace(target.sourceUri, target.contentRange, escaped);
