@@ -46,9 +46,8 @@ function findCssAtCursor(doc: vscode.TextDocument, pos: vscode.Position): CssTar
 }
 
 function unescapeJsonString(inner: string): string {
-  // inner is raw content without surrounding quotes, but still escaped.
-  // JSON.parse needs a quoted JSON string; ensure we pass a valid one.
-  return JSON.parse(`"${inner.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`);
+  // Parse `\"` escaped quotes from JSON string into normal double quote marks.
+  return inner.replace(/\\"/g, '"');
 }
 
 function escapeForJsonString(text: string): string {
