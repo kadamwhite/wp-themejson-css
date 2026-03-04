@@ -1,71 +1,30 @@
-# wp-themejson-css README
+# wp-themejson-css
 
-This is the README for your extension "wp-themejson-css". After writing up a brief description, we recommend including the following sections.
+Syntax highlighting and inline editing for CSS strings embedded in WordPress `theme.json` files.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+### CSS Syntax Highlighting in JSON
 
-For example if there is an image subfolder under your extension project workspace:
+The extension injects CSS grammar into `"css"` property values within `theme.json`, providing full syntax highlighting for what would otherwise render as an opaque string.
 
-\!\[feature X\]\(images/feature-x.png\)
+### Inline CSS Editor
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+Place your cursor inside a `"css"` string value within a theme.json (or theme.json partial like a block style JSON file) and run the command **WP: Edit inline theme.json CSS** from the Command Palette (`Cmd+Shift+P`).
 
-## Requirements
+The minified CSS opens in a side-by-side pane, formatted for readability. Edit the CSS as you normally would, then save (`Cmd+S`). The extension minifies the result with [cssnano](https://cssnano.github.io/cssnano/), re-escapes it, and writes it back into the source JSON automatically.
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+![Video recording of opening the side pane, editing a property, saving, showing it updated inline in the JSON, then resetting and saving again to restore the original state before closing the side pane.](./docs/wp-themejson-css-demo.gif)
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+Setting | Type | Default | Description
+------- | ---- | ------- | -----------
+`wpThemeJsonCss.sortDeclarations` | `boolean` | `false` | Alphabetically sort CSS declarations when minifying back into `theme.json`.
 
-For example:
+## Development
 
-This extension contributes the following settings:
-
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+```sh
+npm install
+# Press F5 in VS Code to launch the Extension Development Host
+```
