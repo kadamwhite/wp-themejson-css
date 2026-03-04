@@ -65,7 +65,12 @@ async function minifyCss(css: string): Promise<string> {
   ]).process(css, {
     from: undefined,
   });
-  return result.css.trim();
+  return result.css.trim()
+    // Need to maintain double-colon for this to parse correctly.
+    .replace( ':after', '::after' )
+    .replace( ':before', '::before' )
+    // Single-quote content: properties is easier than leaving as escaped.
+    .replace( /:(?:"(\s*)")/g, `:'$1'`);
 }
 
 function escapeForJsonString(text: string): string {
