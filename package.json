@@ -13,12 +13,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/kadamwhite/wp-themejson-css.git"
+    "url": "https://github.com/humanmade/wp-themejson-css.git"
   },
   "bugs": {
-    "url": "https://github.com/kadamwhite/wp-themejson-css/issues"
+    "url": "https://github.com/humanmade/wp-themejson-css/issues"
   },
-  "homepage": "https://github.com/kadamwhite/wp-themejson-css#readme",
+  "homepage": "https://github.com/humanmade/wp-themejson-css#readme",
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
