@@ -1,6 +1,6 @@
 {
   "name": "wp-themejson-css",
-  "displayName": "wp-themejson-css",
+  "displayName": "WP theme.json CSS string editor",
   "publisher": "humanmade",
   "description": "Highlight CSS strings inside WordPress theme.json files",
   "version": "1.0.0",
