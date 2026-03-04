@@ -15,7 +15,7 @@
     "commands": [
       {
         "command": "wpThemeJsonCss.editInlineCss",
-        "title": "WP: Edit inline CSS"
+        "title": "WP: Edit inline theme.json CSS"
       }
     ],
     "grammars": [
