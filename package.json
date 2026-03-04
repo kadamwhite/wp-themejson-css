@@ -18,6 +18,16 @@
         "title": "WP: Edit inline theme.json CSS"
       }
     ],
+    "configuration": {
+      "title": "WP theme.json Inline CSS",
+      "properties": {
+        "wpThemeJsonCss.sortDeclarations": {
+          "type": "boolean",
+          "default": false,
+          "description": "Alphabetically sort CSS declarations when minifying back into theme.json."
+        }
+      }
+    },
     "grammars": [
       {
         "scopeName": "wp.themejson.css.injection",

@@ -54,9 +54,13 @@ function unescapeJsonString(inner: string): string {
 }
 
 async function minifyCss(css: string): Promise<string> {
+  const sortDeclarations = vscode.workspace
+    .getConfiguration("wpThemeJsonCss")
+    .get<boolean>("sortDeclarations", false);
+
   const result = await postcss([
     cssnano({
-      preset: ["default", { cssDeclarationSorter: false }],
+      preset: ["default", { cssDeclarationSorter: sortDeclarations }],
     }),
   ]).process(css, {
     from: undefined,
