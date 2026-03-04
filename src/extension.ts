@@ -52,9 +52,17 @@ function unescapeJsonString(inner: string): string {
 }
 
 function escapeForJsonString(text: string): string {
+  const minified = text
+    .replace(/\n/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/:\s+/g, ":")
+    .replace(/;\s+/g, ";")
+    .replace(/\s*([}{])\s*/g, '$1');
   // JSON.stringify returns quoted string; strip surrounding quotes.
-  return JSON.stringify(text).slice(1, -1);
+  return JSON.stringify(minified).slice(1, -1);
 }
+
+const targetsByCssDocUri = new Map<string, CssTarget>();
 
 async function formatCss(css: string): Promise<string> {
   try {
@@ -69,39 +77,83 @@ async function formatCss(css: string): Promise<string> {
   }
 }
 
-class InlineCssProvider implements vscode.TextDocumentContentProvider {
-  private onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
-  onDidChange = this.onDidChangeEmitter.event;
+/**
+ * In-memory file system provider for the wp-css:/ scheme.
+ *
+ * Unlike TextDocumentContentProvider (which is read-only), a
+ * FileSystemProvider gives us real read/write virtual files.
+ * When the user presses Cmd+S the editor calls writeFile() and
+ * onDidSaveTextDocument fires normally — no "Save As" dialog.
+ */
+class CssFileSystemProvider implements vscode.FileSystemProvider {
+  private files = new Map<string, Uint8Array>();
+  private timestamps = new Map<string, number>();
 
-  // map virtual uri -> target (and keep it updated)
-  private targets = new Map<string, CssTarget>();
+  private _emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
+  readonly onDidChangeFile = this._emitter.event;
 
-  setTarget(uri: vscode.Uri, target: CssTarget) {
-    this.targets.set(uri.toString(), target);
-    this.onDidChangeEmitter.fire(uri);
+  watch(): vscode.Disposable {
+    return new vscode.Disposable(() => {});
   }
 
-  getTarget(uri: vscode.Uri) {
-    return this.targets.get(uri.toString());
+  stat(uri: vscode.Uri): vscode.FileStat {
+    const data = this.files.get(uri.toString());
+    if (data !== undefined) {
+      return {
+        type: vscode.FileType.File,
+        ctime: 0,
+        mtime: this.timestamps.get(uri.toString()) ?? Date.now(),
+        size: data.length,
+      };
+    }
+    throw vscode.FileSystemError.FileNotFound(uri);
   }
 
-  async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
-    const t = this.targets.get(uri.toString());
-    if (!t) return "/* No target found */";
+  readDirectory(): [string, vscode.FileType][] {
+    return [];
+  }
+  createDirectory(): void {}
 
-    const css = unescapeJsonString(t.rawEscapedContent);
+  readFile(uri: vscode.Uri): Uint8Array {
+    const data = this.files.get(uri.toString());
+    if (data !== undefined) {
+      return data;
+    }
+    throw vscode.FileSystemError.FileNotFound(uri);
+  }
 
-    return await formatCss(css);
+  writeFile(
+    uri: vscode.Uri,
+    content: Uint8Array,
+    _options: { create: boolean; overwrite: boolean }
+  ): void {
+    this.files.set(uri.toString(), content);
+    this.timestamps.set(uri.toString(), Date.now());
+    this._emitter.fire([{ type: vscode.FileChangeType.Changed, uri }]);
+  }
+
+  delete(uri: vscode.Uri): void {
+    this.files.delete(uri.toString());
+    this.timestamps.delete(uri.toString());
+    this._emitter.fire([{ type: vscode.FileChangeType.Deleted, uri }]);
+  }
+
+  rename(): void {
+    throw vscode.FileSystemError.NoPermissions("Not supported");
   }
 }
+
+let cssFileCounter = 0;
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-  const provider = new InlineCssProvider();
+  const fsProvider = new CssFileSystemProvider();
 
   context.subscriptions.push(
-    vscode.workspace.registerTextDocumentContentProvider(SCHEME, provider)
+    vscode.workspace.registerFileSystemProvider(SCHEME, fsProvider, {
+      isCaseSensitive: true,
+    })
   );
 
   // The command has been defined in the package.json file
@@ -118,21 +170,23 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
 
-      // Use .css suffix to strongly encourage CSS mode
-      const virtualUri = vscode.Uri.parse(
-        `${SCHEME}:/inline/themejson.css?src=${encodeURIComponent(target.sourceUri.toString())}`
-      );
+      const cssRaw = unescapeJsonString(target.rawEscapedContent);
+      const cssPretty = await formatCss(cssRaw);
 
-      provider.setTarget(virtualUri, target);
+      // Create a virtual file in our in-memory FS so Cmd+S works normally
+      const cssUri = vscode.Uri.parse(`${SCHEME}:/inline-${cssFileCounter++}.css`);
+      fsProvider.writeFile(cssUri, Buffer.from(cssPretty), {
+        create: true,
+        overwrite: true,
+      });
 
-      const vdoc = await vscode.workspace.openTextDocument(virtualUri);
+      // Store mapping: virtual css doc URI -> JSON target
+      targetsByCssDocUri.set(cssUri.toString(), target);
 
-      // Force CSS language mode just in case
-      const cssDoc = await vscode.languages.setTextDocumentLanguage(vdoc, "css");
-
+      const cssDoc = await vscode.workspace.openTextDocument(cssUri);
       await vscode.window.showTextDocument(cssDoc, {
         viewColumn: vscode.ViewColumn.Beside,
-        preview: false
+        preview: false,
       });
     })
   );
@@ -140,21 +194,30 @@ export function activate(context: vscode.ExtensionContext) {
   // Save virtual -> write back into JSON
   context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument(async (doc) => {
-      if (doc.uri.scheme !== SCHEME) return;
-
-      const target = provider.getTarget(doc.uri);
+      const target = targetsByCssDocUri.get(doc.uri.toString());
       if (!target) return;
 
-      const escaped = escapeForJsonString(doc.getText());
+      // Take edited CSS, minify + escape, and write back into the JSON string
+      const editedCss = doc.getText();
+      const escaped = escapeForJsonString(editedCss);
 
       const edit = new vscode.WorkspaceEdit();
       edit.replace(target.sourceUri, target.contentRange, escaped);
-
       await vscode.workspace.applyEdit(edit);
 
-      // Optional: auto-save the source file too (nice UX)
+      // Re-read the source document so we can update the stored range
+      // (the content length likely changed, shifting offsets).
       const sourceDoc = await vscode.workspace.openTextDocument(target.sourceUri);
       await sourceDoc.save();
+
+      // Refresh the target so subsequent saves still hit the right range
+      const updatedTarget = findCssAtCursor(
+        sourceDoc,
+        target.contentRange.start
+      );
+      if (updatedTarget) {
+        targetsByCssDocUri.set(doc.uri.toString(), updatedTarget);
+      }
     })
   );
 }
