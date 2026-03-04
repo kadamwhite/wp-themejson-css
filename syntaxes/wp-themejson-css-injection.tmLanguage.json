@@ -1,0 +1,26 @@
+{
+  "scopeName": "wp.themejson.css.injection",
+  "injectionSelector": "L:source.json -comment, L:source.json.comments -comment",
+  "patterns": [
+    {
+      "name": "meta.embedded.block.css.wp-themejson",
+      "begin": "(\"css\"\\s*:\\s*\")",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.string.begin.json" }
+      },
+      "end": "(?<!\\\\)\"",
+      "endCaptures": {
+        "0": { "name": "punctuation.definition.string.end.json" }
+      },
+      "contentName": "source.css",
+      "patterns": [
+        { "include": "source.css" },
+        { "match": "\\\\\"", "name": "constant.character.escape.json" },
+        { "match": "\\\\\\\\", "name": "constant.character.escape.json" }
+      ]
+    }
+  ],
+  "embeddedLanguages": {
+    "source.css": "css"
+  }
+}

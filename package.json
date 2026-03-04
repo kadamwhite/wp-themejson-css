@@ -17,6 +17,13 @@
         "command": "wp-themejson-css.helloWorld",
         "title": "Hello World"
       }
+    ],
+    "grammars": [
+      {
+        "scopeName": "wp.themejson.css.injection",
+        "path": "./syntaxes/wp-themejson-css-injection.tmLanguage.json",
+        "injectTo": ["source.json", "source.json.comments"]
+      }
     ]
   },
   "scripts": {
