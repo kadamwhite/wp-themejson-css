@@ -4,6 +4,7 @@
   "description": "Highlight CSS strings inside WordPress theme.json files",
   "version": "0.0.2",
   "license": "MIT",
+  "icon": "icon.png",
   "engines": {
     "vscode": "^1.109.0"
   },
