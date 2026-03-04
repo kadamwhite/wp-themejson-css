@@ -2,6 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import * as jsonc from "jsonc-parser";
+import prettier from "prettier";
 
 const SCHEME = "wp-css";
 
@@ -55,6 +56,19 @@ function escapeForJsonString(text: string): string {
   return JSON.stringify(text).slice(1, -1);
 }
 
+async function formatCss(css: string): Promise<string> {
+  try {
+    return await prettier.format(css, {
+      parser: "css",
+      printWidth: 80
+    });
+  } catch {
+    // If Prettier fails (rare but possible with unusual syntax),
+    // just return the raw CSS so the editor still opens.
+    return css;
+  }
+}
+
 class InlineCssProvider implements vscode.TextDocumentContentProvider {
   private onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
   onDidChange = this.onDidChangeEmitter.event;
@@ -71,10 +85,13 @@ class InlineCssProvider implements vscode.TextDocumentContentProvider {
     return this.targets.get(uri.toString());
   }
 
-  provideTextDocumentContent(uri: vscode.Uri): string {
+  async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
     const t = this.targets.get(uri.toString());
     if (!t) return "/* No target found */";
-    return unescapeJsonString(t.rawEscapedContent);
+
+    const css = unescapeJsonString(t.rawEscapedContent);
+
+    return await formatCss(css);
   }
 }
 
