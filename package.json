@@ -3,6 +3,7 @@
   "displayName": "wp-themejson-css",
   "description": "Highlight CSS strings inside WordPress theme.json files",
   "version": "0.0.1",
+  "license": "MIT",
   "engines": {
     "vscode": "^1.109.0"
   },
