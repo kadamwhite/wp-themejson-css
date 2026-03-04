@@ -14,15 +14,18 @@
   "contributes": {
     "commands": [
       {
-        "command": "wp-themejson-css.helloWorld",
-        "title": "Hello World"
+        "command": "wpThemeJsonCss.editInlineCss",
+        "title": "WP: Edit inline CSS"
       }
     ],
     "grammars": [
       {
         "scopeName": "wp.themejson.css.injection",
         "path": "./syntaxes/wp-themejson-css-injection.tmLanguage.json",
-        "injectTo": ["source.json", "source.json.comments"]
+        "injectTo": [
+          "source.json",
+          "source.json.comments"
+        ]
       }
     ]
   },
@@ -35,13 +38,16 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.109.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
-    "typescript-eslint": "^8.56.1",
+    "@types/vscode": "^1.109.0",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
     "eslint": "^9.39.3",
     "typescript": "^5.9.3",
-    "@vscode/test-cli": "^0.0.12",
-    "@vscode/test-electron": "^2.5.2"
+    "typescript-eslint": "^8.56.1"
+  },
+  "dependencies": {
+    "jsonc-parser": "^3.3.1"
   }
 }
