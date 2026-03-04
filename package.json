@@ -2,7 +2,7 @@
   "name": "wp-themejson-css",
   "displayName": "wp-themejson-css",
   "description": "Highlight CSS strings inside WordPress theme.json files",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "license": "MIT",
   "engines": {
     "vscode": "^1.109.0"
