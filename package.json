@@ -1,6 +1,7 @@
 {
   "name": "wp-themejson-css",
   "displayName": "wp-themejson-css",
+  "publisher": "humanmade",
   "description": "Highlight CSS strings inside WordPress theme.json files",
   "version": "1.0.0",
   "license": "MIT",
